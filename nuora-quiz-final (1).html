@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuora | Wellness Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#C4577A;
+  --cta:#C4577A;
+  --cta-hover:#A8456A;
+  --bg:#F3F1EF;
+  --card:#FFFFFF;
+  --text:#1A1A1A;
+  --text-light:#6B6574;
+  --accent-light:#FFF0F3;
+  --green:#2E9E5E;
+  --green-bg:#EAF6EF;
+  --orange-warn:#E8935A;
+  --orange-bg:#FEF3EB;
+  --shadow:0 2px 12px rgba(0,0,0,0.06);
+  --radius:10px;
+  --font-serif:'DM Serif Display',Georgia,serif;
+  --font-body:'DM Sans',-apple-system,sans-serif;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+.quiz-wrap{max-width:600px;margin:0 auto;padding:0 20px 20px;min-height:100vh;display:flex;flex-direction:column}
+
+/* PROGRESS */
+.progress-wrap{position:sticky;top:0;z-index:100;background:var(--bg);padding:12px 0 8px}
+.progress-track{width:100%;height:5px;background:#DDD;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),#E8A0B5);border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%}
+
+/* SCREENS */
+.scr{display:none;flex-direction:column;align-items:center;animation:fadeUp .35s ease-out;flex:1}
+.scr.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* TYPOGRAPHY */
+.q-title{font-family:var(--font-serif);font-size:26px;font-weight:400;line-height:1.35;text-align:center;margin:32px 0 12px}
+.q-sub{font-size:14px;color:var(--text-light);text-align:center;line-height:1.5;margin-bottom:24px;max-width:460px}
+
+/* OPTIONS — flat white cards like reference */
+.opts{width:100%;display:flex;flex-direction:column;gap:10px;max-width:460px}
+.opt{
+  width:100%;padding:16px 20px;
+  background:var(--card);border:1.5px solid #E8E5E2;border-radius:var(--radius);
+  cursor:pointer;transition:all .15s;
+  font-family:var(--font-body);font-size:15px;font-weight:400;color:#444;
+  text-align:left;display:flex;align-items:center;gap:12px;
+}
+.opt:hover{border-color:var(--primary);background:#FEFAFA}
+.opt.sel{border-color:var(--primary);background:var(--accent-light);color:var(--text);font-weight:500}
+.opt .em{font-size:20px;flex-shrink:0}
+
+/* checkbox for multi */
+.opt .chk{width:20px;height:20px;border:2px solid #CCC;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.opt.sel .chk{background:var(--primary);border-color:var(--primary)}
+.opt.sel .chk::after{content:'\2713';color:#fff;font-size:13px;font-weight:700}
+
+/* CTA BUTTON — orange/primary with arrow */
+.btn-cta{
+  width:100%;max-width:460px;padding:16px 24px;
+  background:var(--cta);color:#fff;border:none;border-radius:var(--radius);
+  font-family:var(--font-body);font-size:16px;font-weight:600;
+  cursor:pointer;transition:all .2s;margin-top:20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.btn-cta:hover{background:var(--cta-hover);transform:translateY(-1px);box-shadow:0 6px 20px rgba(196,87,122,.25)}
+.btn-cta:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-cta .arrow{font-size:18px}
+
+/* TESTIMONIAL */
+.testi{background:var(--accent-light);border-radius:var(--radius);padding:24px 20px;text-align:center;width:100%;max-width:460px;margin-bottom:20px}
+.testi .qt{font-size:14px;line-height:1.6;color:#444;font-style:italic;margin-bottom:12px}
+.testi .au{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.5px}
+
+/* INTERLUDE */
+.inter{text-align:center;padding:20px 0;width:100%}
+.inter h2{font-family:var(--font-serif);font-size:24px;margin-bottom:16px}
+.inter .stat{font-size:16px;color:#444;line-height:1.55;max-width:420px;margin:0 auto}
+
+/* WHY WE ASK — visible card like reference */
+.why-card{margin-top:16px;padding:16px 20px;background:#FAFAF8;border-radius:var(--radius);width:100%;max-width:460px}
+.why-card h4{font-size:14px;font-weight:700;color:var(--primary);margin-bottom:6px}
+.why-card p{font-size:13px;color:var(--text-light);line-height:1.55}
+
+/* CAROUSEL — auto-sliding testimonial images */
+.carousel{position:relative;width:100%;max-width:340px;margin:24px auto 16px;overflow:hidden;border-radius:12px;box-shadow:var(--shadow)}
+.carousel-track{display:flex;transition:transform .6s cubic-bezier(.4,0,.2,1)}
+.carousel-slide{flex:0 0 100%;aspect-ratio:1/1;background:#EDE8E4;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.carousel-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.carousel-dots{display:flex;justify-content:center;gap:8px;margin-top:14px}
+.carousel-dot{width:8px;height:8px;border-radius:50%;background:#D4CCC7;transition:all .3s;cursor:pointer;border:none;padding:0}
+.carousel-dot.active{background:var(--primary);width:24px;border-radius:4px}
+
+/* LOADING */
+.loading{text-align:center;width:100%;padding:60px 0}
+.spinner{width:48px;height:48px;border:4px solid #DDD;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading .lt{font-size:15px;color:var(--text-light);transition:opacity .3s}
+.loading .ls{font-size:13px;color:var(--text-light);opacity:.7;margin-top:8px;max-width:360px;margin-left:auto;margin-right:auto;line-height:1.5}
+
+/* ═══ PROFILE SUMMARY ═══ */
+.profile-card{background:var(--card);border-radius:12px;padding:28px 24px;box-shadow:var(--shadow);width:100%;max-width:480px;margin-bottom:16px}
+.profile-card h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px}
+.gauge-wrap{position:relative;height:10px;background:linear-gradient(90deg,#E85A5A,#E8935A,#4CAF78);border-radius:5px;margin:12px 0 6px}
+.gauge-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;background:#fff;border:3px solid var(--primary);border-radius:50%;transition:left .8s cubic-bezier(.4,0,.2,1)}
+.gauge-labels{display:flex;justify-content:space-between;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.badge-high{display:inline-block;padding:4px 10px;background:var(--accent-light);border:1px solid var(--primary);border-radius:6px;font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px}
+.assess-box{background:var(--accent-light);border-radius:8px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;margin:16px 0}
+.assess-box .icon-warn{width:28px;height:28px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-weight:700;font-size:14px}
+.assess-box h4{font-size:14px;font-weight:700;margin-bottom:2px}
+.assess-box p{font-size:12px;color:var(--text-light);line-height:1.4}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat-item{background:#FAFAF8;border-radius:8px;padding:12px 14px}
+.stat-item .label{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.stat-item .val{font-size:15px;font-weight:700;color:var(--text);margin-top:2px}
+
+/* ═══ GROWTH CHART (SVG) ═══ */
+.chart-wrap{background:var(--card);border-radius:12px;padding:24px;box-shadow:var(--shadow);width:100%;max-width:480px;margin:16px 0}
+.chart-wrap svg{width:100%;height:auto}
+
+/* ═══ OFFER ═══ */
+.offer-box{width:100%;max-width:480px;text-align:center}
+.offer-box h2{font-family:var(--font-serif);font-size:24px;line-height:1.35;margin-bottom:8px}
+.offer-box .sub{font-size:14px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
+.offer-box .sub u{color:var(--text);font-weight:500}
+.prod-card{background:var(--card);border-radius:12px;padding:28px 24px;box-shadow:var(--shadow);margin:20px 0;text-align:center}
+.prod-card .stat-badge{font-size:12px;font-weight:600;color:#fff;background:var(--primary);padding:6px 14px;border-radius:20px;display:inline-block;margin-bottom:12px}
+.prod-benefits{display:flex;justify-content:center;gap:24px;margin:16px 0;flex-wrap:wrap}
+.prod-benefits .ben{text-align:center;font-size:12px;color:var(--text-light);font-weight:500}
+.prod-benefits .ben .ico{font-size:24px;display:block;margin-bottom:4px}
+.btn-claim{
+  width:100%;max-width:460px;padding:18px 24px;
+  background:var(--cta);color:#fff;border:none;border-radius:var(--radius);
+  font-family:var(--font-body);font-size:17px;font-weight:700;
+  cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.5px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.btn-claim:hover{background:var(--cta-hover);transform:translateY(-2px);box-shadow:0 8px 28px rgba(196,87,122,.3)}
+
+/* FOOTER */
+.quiz-ft{text-align:center;font-size:11px;color:#999;margin-top:auto;padding-top:40px;line-height:1.5}
+.quiz-ft a{color:#999}
+
+@media(max-width:480px){
+  .q-title{font-size:22px}
+  .opt{padding:14px 16px;font-size:14px}
+  .offer-box h2{font-size:20px}
+  .stat-grid{gap:8px}
+  .prod-benefits{gap:16px}
+}
+</style>
+</head>
+<body>
+<div class="quiz-wrap">
+  <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="pf"></div></div></div>
+
+  <!-- ═══ S0: INTRO + AGE (combined like reference ha15) ═══ -->
+  <div class="scr active" data-s="0">
+    <h1 class="q-title" style="margin-top:20px">Find The Nuora Routine That Actually Works For You</h1>
+    <p class="q-sub">&#10003;&#65039; This 2-minute assessment matches your symptoms to a personalized recommendation backed by clinical research.</p>
+    <div class="testi">
+      <p class="qt">"I'd tried everything - antibiotics, boric acid, every probiotic on the shelf. Nothing lasted. This was the first thing that actually fixed it for good."</p>
+      <p class="au">JESSICA M., Verified Customer</p>
+    </div>
+    <h2 class="q-title" style="margin-top:4px;font-size:22px">What is your age range?</h2>
+    <div class="opts" style="margin-top:12px">
+      <button class="opt" onclick="pick(this,1)">Under 25</button>
+      <button class="opt" onclick="pick(this,1)">25 - 34</button>
+      <button class="opt" onclick="pick(this,1)">35 - 44</button>
+      <button class="opt" onclick="pick(this,1)">45 - 54</button>
+      <button class="opt" onclick="pick(this,1)">55+</button>
+    </div>
+  </div>
+
+  <!-- ═══ S1: WHAT'S GOING ON (with emojis like ha14) ═══ -->
+  <div class="scr" data-s="1">
+    <h2 class="q-title">What's been going on lately?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,2)"><span class="em">&#x1F33A;</span> Odor that comes and goes</button>
+      <button class="opt" onclick="pick(this,2)"><span class="em">&#x1F4A7;</span> Unusual discharge</button>
+      <button class="opt" onclick="pick(this,2)"><span class="em">&#x1F350;</span> Dryness or discomfort during intimacy</button>
+      <button class="opt" onclick="pick(this,2)"><span class="em">&#x1F9FC;</span> Not feeling fresh, even after a shower</button>
+      <button class="opt" onclick="pick(this,2)"><span class="em">&#x1F504;</span> Things that keep coming back</button>
+    </div>
+  </div>
+
+  <!-- ═══ S2: HOW LONG (ha13) ═══ -->
+  <div class="scr" data-s="2">
+    <h2 class="q-title">How long has this been going on?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,3)">A few weeks</button>
+      <button class="opt" onclick="pick(this,3)">A couple of months</button>
+      <button class="opt" onclick="pick(this,3)">Six months to a year</button>
+      <button class="opt" onclick="pick(this,3)">Over a year</button>
+      <button class="opt" onclick="pick(this,3)">On and off for years</button>
+    </div>
+  </div>
+
+  <!-- ═══ S3: WHICH SOUNDS FAMILIAR (ha12 — with emojis) ═══ -->
+  <div class="scr" data-s="3">
+    <h2 class="q-title">Which of these sounds familiar?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,4)"><span class="em">&#x1F50D;</span> Checking throughout the day &mdash; bathroom trips that are really smell checks</button>
+      <button class="opt" onclick="pick(this,4)"><span class="em">&#x1F6BF;</span> Showering before any kind of closeness</button>
+      <button class="opt" onclick="pick(this,4)"><span class="em">&#x1F4C5;</span> Wearing liners daily or changing underwear more than once</button>
+      <button class="opt" onclick="pick(this,4)"><span class="em">&#x1F494;</span> Pulling away when a partner gets close</button>
+    </div>
+  </div>
+
+  <!-- ═══ S4: MOST FRUSTRATING (ha11) ═══ -->
+  <div class="scr" data-s="4">
+    <h2 class="q-title">What's been the most frustrating part for you?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,5)">It keeps coming back</button>
+      <button class="opt" onclick="pick(this,5)">Spending money on things that don't last</button>
+      <button class="opt" onclick="pick(this,5)">The way it's changed confidence</button>
+      <button class="opt" onclick="pick(this,5)">Not knowing what's actually causing it</button>
+    </div>
+  </div>
+
+  <!-- ═══ S5: WHAT HAVE YOU TRIED (ha10 — multi-select) ═══ -->
+  <div class="scr" data-s="5">
+    <h2 class="q-title">What have you already tried?</h2>
+    <p class="q-sub">(Choose all that apply)</p>
+    <div class="opts" id="ms1">
+      <button class="opt" onclick="tog(this)"><span class="chk"></span> Antibiotics</button>
+      <button class="opt" onclick="tog(this)"><span class="chk"></span> Boric acid suppositories</button>
+      <button class="opt" onclick="tog(this)"><span class="chk"></span> Probiotics</button>
+      <button class="opt" onclick="tog(this)"><span class="chk"></span> Washes, sprays, or pH products</button>
+      <button class="opt" onclick="tog(this)"><span class="chk"></span> A bit of everything</button>
+    </div>
+    <button class="btn-cta" id="mc1" onclick="go(6)" disabled><span>Continue</span><span class="arrow">&rarr;</span></button>
+  </div>
+
+  <!-- ═══ S6: SOCIAL PROOF INTERLUDE (ha9) ═══ -->
+  <div class="scr" data-s="6">
+    <div class="inter" style="margin-bottom:0">
+      <h2>You are not alone &#x1F49B;</h2>
+      <p class="stat">1 in 3 American women experience recurring vaginal odor or unusual discharge every year. This is far more common than it feels &mdash; and it is preventable.</p>
+    </div>
+
+    <div class="carousel" id="testiCarousel">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="carousel-slide"><img src="https://cdn.shopify.com/s/files/1/0671/0345/7420/files/Image_28_f8c92cff-074b-40b3-b545-b0a4cb0d88db.webp?v=1774352752" alt="Customer testimonial 1"></div>
+        <div class="carousel-slide"><img src="https://cdn.shopify.com/s/files/1/0671/0345/7420/files/Image_05_2_1.webp?v=1774352750" alt="Customer testimonial 2"></div>
+        <div class="carousel-slide"><img src="https://cdn.shopify.com/s/files/1/0671/0345/7420/files/Image_16.webp?v=1774352752" alt="Customer testimonial 3"></div>
+      </div>
+    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
+
+    <button class="btn-cta" onclick="go(7)"><span>Continue</span><span class="arrow">&rarr;</span></button>
+  </div>
+
+  <!-- ═══ S7: HOW QUICKLY (ha8) ═══ -->
+  <div class="scr" data-s="7">
+    <h2 class="q-title">How quickly do you want to see results?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,8)">Within a week</button>
+      <button class="opt" onclick="pick(this,8)">Within two weeks</button>
+      <button class="opt" onclick="pick(this,8)">Within a month</button>
+      <button class="opt" onclick="pick(this,8)">I'm patient, as long as it works</button>
+    </div>
+  </div>
+
+  <!-- ═══ S8: IF ONE THING (ha7) ═══ -->
+  <div class="scr" data-s="8">
+    <h2 class="q-title">If one thing could change, what would it be?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,9)">Feeling fresh without thinking about it</button>
+      <button class="opt" onclick="pick(this,9)">Being comfortable during intimacy again</button>
+      <button class="opt" onclick="pick(this,9)">Breaking the cycle for good</button>
+      <button class="opt" onclick="pick(this,9)">Just feeling like myself again</button>
+    </div>
+  </div>
+
+  <!-- ═══ S9: ANALYZING 1 ═══ -->
+  <div class="scr" data-s="9">
+    <div class="loading">
+      <div class="spinner"></div>
+      <h2 class="q-title" style="margin-top:0">Analyzing your responses...</h2>
+      <p class="ls">We're matching your symptoms to our clinical research to build your personalized recommendation.</p>
+    </div>
+  </div>
+
+  <!-- ═══ S10: STRESS LEVEL (ha6) ═══ -->
+  <div class="scr" data-s="10">
+    <h2 class="q-title">Would you say your stress levels have been high lately?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,11)">Yes, pretty high</button>
+      <button class="opt" onclick="pick(this,11)">Somewhat elevated</button>
+      <button class="opt" onclick="pick(this,11)">No, manageable</button>
+    </div>
+    <div class="why-card">
+      <h4>Why we ask</h4>
+      <p>Stress raises cortisol, which disrupts your vaginal microbiome and weakens the good bacteria that keep pH balanced. It's one of the top hidden drivers of recurring odor and imbalance.</p>
+    </div>
+  </div>
+
+  <!-- ═══ S11: PROCESSED FOODS (ha5) ═══ -->
+  <div class="scr" data-s="11">
+    <h2 class="q-title">How often do you eat processed foods?</h2>
+    <div class="opts">
+      <button class="opt" onclick="pick(this,12)">Daily &mdash; most meals include processed foods</button>
+      <button class="opt" onclick="pick(this,12)">Several times a week</button>
+      <button class="opt" onclick="pick(this,12)">Occasionally &mdash; mostly whole foods</button>
+      <button class="opt" onclick="pick(this,12)">Rarely &mdash; I avoid processed foods</button>
+    </div>
+    <div class="why-card">
+      <h4>Why we ask</h4>
+      <p>Sugar and processed foods feed the bad bacteria that cause odor, discharge, and recurring BV. Your diet directly shapes your vaginal microbiome &mdash; and it's a big reason things keep coming back.</p>
+    </div>
+  </div>
+
+  <!-- ═══ S12: ANALYZING 2 ═══ -->
+  <div class="scr" data-s="12">
+    <div class="loading">
+      <div class="spinner"></div>
+      <h2 class="q-title" style="margin-top:0">Building your profile...</h2>
+      <p class="lt" id="lt">Analysing your profile</p>
+    </div>
+  </div>
+
+  <!-- ═══ S13: PROFILE SUMMARY (ha4) ═══ -->
+  <div class="scr" data-s="13">
+    <h2 class="q-title">Summary of your Profile</h2>
+    <div class="profile-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Level of pH Imbalance</h3>
+        <span class="badge-high">HIGH LEVEL</span>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge-dot" style="left:70%"></div>
+      </div>
+      <div class="gauge-labels"><span>Low</span><span>Normal</span><span>Medium</span><span>High</span></div>
+
+      <div class="assess-box">
+        <div class="icon-warn">!</div>
+        <div>
+          <h4>Vaginal Flora Assessment: IMBALANCED</h4>
+          <p>Your good bacteria have been suppressed, allowing odor-causing microbes to take over. Without the right support, this cycle keeps repeating.</p>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-item"><div class="label">Imbalance Pattern:</div><div class="val">Recurring</div></div>
+        <div class="stat-item"><div class="label">Room for Improvement:</div><div class="val">HIGH</div></div>
+        <div class="stat-item"><div class="label">Root Causes:</div><div class="val">Diet &amp; Stress</div></div>
+        <div class="stat-item"><div class="label">Quality of Life Impact:</div><div class="val">Substantial</div></div>
+      </div>
+    </div>
+    <button class="btn-cta" onclick="go(14)"><span>CONTINUE</span><span class="arrow">&rarr;</span></button>
+  </div>
+
+  <!-- ═══ S14: RESULTS + CHART (ha13/ha3) ═══ -->
+  <div class="scr" data-s="14">
+    <h2 class="q-title">Your personalised recommendation is ready.</h2>
+    <p class="q-sub">Based on your responses, we expect you to start feeling the difference by <strong style="color:var(--primary)" id="rd2"></strong></p>
+
+    <div class="chart-wrap">
+      <svg viewBox="0 0 440 260" xmlns="http://www.w3.org/2000/svg">
+        <!-- axes -->
+        <line x1="60" y1="20" x2="60" y2="210" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="60" y1="210" x2="420" y2="210" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="60" y1="120" x2="420" y2="120" stroke="#1A1A1A" stroke-width="1" stroke-dasharray="4"/>
+        <!-- Y labels -->
+        <text x="8" y="28" font-size="9" font-weight="700" font-family="monospace" fill="#1A1A1A">FEELING</text>
+        <text x="8" y="42" font-size="9" font-weight="700" font-family="monospace" fill="#1A1A1A">FRESH</text>
+        <text x="8" y="118" font-size="9" font-weight="700" font-family="monospace" fill="#1A1A1A">BALANCED</text>
+        <text x="8" y="200" font-size="9" font-weight="700" font-family="monospace" fill="#1A1A1A">OUT OF</text>
+        <text x="8" y="214" font-size="9" font-weight="700" font-family="monospace" fill="#1A1A1A">BALANCE</text>
+        <!-- gradient area -->
+        <defs>
+          <linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#C4577A" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#C4577A" stop-opacity="0.05"/>
+          </linearGradient>
+        </defs>
+        <path d="M60,195 C120,190 180,170 240,140 C300,110 360,65 400,45 L400,210 L60,210 Z" fill="url(#gfill)"/>
+        <path d="M60,195 C120,190 180,170 240,140 C300,110 360,65 400,45" fill="none" stroke="#C4577A" stroke-width="3" stroke-linecap="round"/>
+        <!-- dots -->
+        <circle cx="180" cy="170" r="4" fill="#C4577A" opacity=".6"/>
+        <circle cx="300" cy="110" r="4" fill="#C4577A" opacity=".6"/>
+        <circle cx="400" cy="45" r="6" fill="#fff" stroke="#C4577A" stroke-width="3"/>
+        <!-- labels -->
+        <rect x="55" y="175" width="105" height="24" rx="4" fill="#1A1A1A"/>
+        <text x="107" y="191" font-size="10" fill="#fff" font-weight="700" font-family="sans-serif" text-anchor="middle">YOU ARE HERE</text>
+        <rect x="285" y="28" width="128" height="24" rx="4" fill="#C4577A"/>
+        <text x="349" y="44" font-size="10" fill="#fff" font-weight="700" font-family="sans-serif" text-anchor="middle">GOAL: FRESH &amp; FREE</text>
+        <line x1="349" y1="52" x2="400" y2="45" stroke="#C4577A" stroke-width="1.5"/>
+        <!-- X labels -->
+        <text x="78" y="238" font-size="10" font-weight="700" font-family="monospace" fill="#1A1A1A">TODAY</text>
+        <text x="148" y="238" font-size="10" font-weight="700" font-family="monospace" fill="#1A1A1A">5-7 DAYS</text>
+        <text x="250" y="238" font-size="10" font-weight="700" font-family="monospace" fill="#1A1A1A">2-3 WEEKS</text>
+        <text x="365" y="238" font-size="10" font-weight="700" font-family="monospace" fill="#1A1A1A">3 WEEKS+</text>
+      </svg>
+    </div>
+    <button class="btn-cta" onclick="go(15)"><span>Continue</span><span class="arrow">&rarr;</span></button>
+  </div>
+
+  <!-- ═══ S15: OFFER (ha15/ha16) ═══ -->
+  <div class="scr" data-s="15">
+    <div class="offer-box">
+      <h2>Your Personalised Recommendation</h2>
+      <p class="sub">Based on your responses, here's what we predict you'll start to see with Nuora:</p>
+
+      <div class="prod-card">
+        <div class="stat-badge">92% of Women Saw Results*</div>
+        <div style="font-size:14px;color:#999;margin-bottom:14px">*In an independent study of Nuora customers.</div>
+
+        <div style="text-align:left;padding:0 4px 8px;border-top:1px solid #EDE8E4;padding-top:16px">
+          <div style="display:flex;gap:10px;margin-bottom:10px;font-size:14px;color:#333"><span style="color:var(--primary);font-weight:700">&#9679;</span> Reduced odor and unusual discharge within 5&ndash;7 days</div>
+          <div style="display:flex;gap:10px;margin-bottom:10px;font-size:14px;color:#333"><span style="color:var(--primary);font-weight:700">&#9679;</span> Consistent freshness within 2&ndash;3 weeks</div>
+          <div style="display:flex;gap:10px;margin-bottom:10px;font-size:14px;color:#333"><span style="color:var(--primary);font-weight:700">&#9679;</span> Long-lasting results within 3 weeks and beyond</div>
+        </div>
+
+        <div class="prod-benefits">
+          <div class="ben"><span class="ico">&#x2728;</span>Balance<br>pH</div>
+          <div class="ben"><span class="ico">&#x1F33F;</span>Clinical<br>Probiotic</div>
+          <div class="ben"><span class="ico">&#x1F4A7;</span>Restore<br>Freshness</div>
+          <div class="ben"><span class="ico">&#x1F6E1;&#xFE0F;</span>60-Day<br>Guarantee</div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--text-light);text-align:center;margin:4px 0 14px"><strong style="color:var(--text)">47,832 women</strong> have found relief with Nuora</p>
+
+      <button class="btn-claim" onclick="window.location.href='https://mynuora.com/products/feminine-balance-gummies-1'"><span>SEE THE FULL RECOMMENDATION</span><span class="arrow">&#x27A4;</span></button>
+
+      <p style="font-size:12px;color:var(--text-light);text-align:center;margin-top:14px">60-day money-back guarantee &middot; Free shipping &middot; Cancel anytime</p>
+    </div>
+  </div>
+
+  <div class="quiz-ft">
+    &copy; Nuora 2026 &middot; <a href="https://mynuora.com/policies/terms-of-service">Terms</a> &middot; <a href="https://mynuora.com/policies/privacy-policy">Privacy</a><br>
+    These statements have not been evaluated by the FDA. Not intended to diagnose, treat, cure, or prevent any disease.
+  </div>
+</div>
+
+<script>
+var total=16,cur=0;
+var carouselInterval=null;
+
+function initCarousel(){
+  var track=document.getElementById('carouselTrack');
+  var dotsContainer=document.getElementById('carouselDots');
+  if(!track||!dotsContainer)return;
+  var slides=track.querySelectorAll('.carousel-slide');
+  var count=slides.length;
+  // Build dots
+  dotsContainer.innerHTML='';
+  for(var i=0;i<count;i++){
+    var d=document.createElement('button');
+    d.className='carousel-dot'+(i===0?' active':'');
+    d.setAttribute('data-idx',i);
+    d.onclick=(function(idx){return function(){goToSlide(idx)}})(i);
+    dotsContainer.appendChild(d);
+  }
+  var current=0;
+  function goToSlide(idx){
+    current=idx;
+    track.style.transform='translateX(-'+(idx*100)+'%)';
+    var dots=dotsContainer.querySelectorAll('.carousel-dot');
+    for(var j=0;j<dots.length;j++)dots[j].classList.toggle('active',j===idx);
+  }
+  window.goToSlide=goToSlide;
+  if(carouselInterval)clearInterval(carouselInterval);
+  carouselInterval=setInterval(function(){
+    current=(current+1)%count;
+    goToSlide(current);
+  },3500);
+}
+
+function stopCarousel(){
+  if(carouselInterval){clearInterval(carouselInterval);carouselInterval=null}
+}
+
+function go(n){
+  var a=document.querySelector('.scr.active');if(a)a.classList.remove('active');
+  var t=document.querySelector('[data-s="'+n+'"]');if(t)t.classList.add('active');
+  cur=n;
+  document.getElementById('pf').style.width=Math.round(n/(total-1)*100)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // Start/stop carousel
+  if(n===6){initCarousel()}else{stopCarousel()}
+
+  if(n===9)setTimeout(function(){go(10)},2800);
+  if(n===12){
+    var msgs=['Analysing your profile','Gathering relevant data','Finalizing calculations','Almost there...'],i=0,el=document.getElementById('lt');
+    var iv=setInterval(function(){i++;if(i<msgs.length){el.style.opacity=0;setTimeout(function(){el.textContent=msgs[i];el.style.opacity=1},200)}else{clearInterval(iv);go(13)}},1100);
+  }
+  if(n===14){
+    var d=new Date(),o={month:'long',day:'numeric',year:'numeric'};
+    d.setDate(d.getDate()+21);
+    document.getElementById('rd2').textContent=d.toLocaleDateString('en-US',o);
+  }
+}
+function pick(b,nx){
+  var sibs=b.closest('.opts').querySelectorAll('.opt');
+  for(var j=0;j<sibs.length;j++)sibs[j].classList.remove('sel');
+  b.classList.add('sel');
+  setTimeout(function(){go(nx)},300);
+}
+function tog(b){
+  b.classList.toggle('sel');
+  var p=b.closest('.opts'),all=p.querySelectorAll('.opt'),last=all[all.length-1];
+  if(b===last&&b.classList.contains('sel')){for(var k=0;k<all.length;k++)all[k].classList.add('sel')}
+  else if(b!==last){last.classList.remove('sel')}
+  document.getElementById('mc1').disabled=!p.querySelector('.opt.sel');
+}
+</script>
+</body>
+</html>
